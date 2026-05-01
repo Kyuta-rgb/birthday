@@ -1,0 +1,1294 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kyulen — 20</title>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: linear-gradient(to bottom, #0b0b0f, #1c1f2b, #0b0b0f);
+        color: #d6d6db;
+        font-family: "Crimson Text", serif;
+        overflow-x: hidden;
+      }
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: url("https://grainy-gradients.vercel.app/noise.svg");
+        opacity: 0.05;
+        pointer-events: none;
+      }
+
+      /* SCENES */
+      .scene {
+        min-height: 100vh;
+        width: 100%;
+        display: none;
+        padding: 60px 20px;
+      }
+
+      .scene.active {
+        display: block;
+      }
+
+      /* LETTER STYLE */
+      .letter {
+        max-width: 900px;
+        margin: auto;
+        background: rgba(20, 20, 30, 0.95);
+        padding: 40px;
+        border-left: 6px solid #8b0000;
+        border-radius: 10px;
+        line-height: 1.8;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+      }
+
+      h1,
+      h2 {
+        color: #a59bb5;
+        margin-bottom: 20px;
+        font-family: "Playfair Display", serif;
+        text-shadow: 0 0 10px rgba(165, 155, 181, 0.2);
+      }
+
+      p {
+        margin-bottom: 20px;
+        font-size: 18px;
+      }
+
+      /* BUTTON */
+      button {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 10px 15px;
+        background: #111;
+        color: white;
+        border: 1px solid #444;
+        cursor: pointer;
+        z-index: 100001;
+      }
+      /* INTRO ANIMATION */
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* apply animation only inside active scene */
+      .scene.active .letter h1 {
+        animation: fadeUp 1.2s ease forwards;
+      }
+
+      .scene.active .letter p {
+        opacity: 0;
+        animation: fadeUp 1s ease forwards;
+      }
+
+      /* stagger paragraphs */
+      .scene.active .letter p:nth-child(2) {
+        animation-delay: 0.3s;
+      }
+      .scene.active .letter p:nth-child(3) {
+        animation-delay: 0.6s;
+      }
+      .scene.active .letter p:nth-child(4) {
+        animation-delay: 0.9s;
+      }
+      /* INTRO LOADER */
+      .intro-loader {
+        position: fixed;
+        inset: 0;
+        background: #0a0a0a;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+
+      /* YEAR TEXT */
+      .year {
+        font-size: 28px;
+        margin-bottom: 20px;
+        color: #e0b0ff;
+        font-family: "Playfair Display", serif;
+        transition: all 0.3s ease;
+      }
+
+      /* TRACK */
+      .track {
+        width: 70%;
+        height: 4px;
+        background: #222;
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      /* BALL */
+      .ball {
+        width: 18px;
+        height: 18px;
+        background: #8b0000;
+        border-radius: 50%;
+        position: absolute;
+        top: -7px;
+        left: 0;
+        transition: all 0.4s ease;
+        box-shadow: 0 0 15px rgba(139, 0, 0, 0.7);
+      }
+      .intro-stick {
+        position: fixed;
+        inset: 0;
+        background: #0a0a0a;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      /* STICKMAN */
+      .stickman {
+        position: absolute;
+        left: 20%;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+      .scene {
+        position: relative;
+        z-index: 1;
+      }
+      .stickman,
+      .strings {
+        z-index: 10001;
+      }
+      .intro-stick {
+        z-index: 10000;
+      }
+      .stickman div {
+        position: absolute;
+        background: #eaeaea;
+      }
+
+      /* head */
+      .head {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        top: -40px;
+        left: 0;
+      }
+
+      /* body */
+      .body {
+        width: 3px;
+        height: 50px;
+        top: -22px;
+        left: 8px;
+      }
+
+      /* arms */
+      .arm {
+        width: 30px;
+        height: 3px;
+        top: 0;
+      }
+
+      .arm.left {
+        left: -25px;
+        transform: rotate(-20deg);
+      }
+
+      .arm.right {
+        left: 8px;
+        transform: rotate(20deg);
+      }
+
+      /* legs */
+      .leg {
+        width: 30px;
+        height: 3px;
+        top: 30px;
+      }
+
+      .leg.left {
+        left: -20px;
+        transform: rotate(25deg);
+      }
+
+      .leg.right {
+        left: 8px;
+        transform: rotate(-25deg);
+      }
+
+      /* STRINGS */
+
+      /* STRING CONTAINER MOVES WITH STICKMAN */
+      .strings {
+        position: absolute;
+        left: 100px;
+        top: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* STRING */
+      .string {
+        position: absolute;
+        width: 3px;
+        height: 160px;
+        transform-origin: top;
+        animation: sway 3.5s ease-in-out infinite;
+      }
+      .intro-stick.walk .circle {
+        animation: fallBounce 1.2s ease-in-out infinite;
+      }
+      @keyframes fallBounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(12px);
+        }
+      }
+      .string {
+        animation: sway 2.8s ease-in-out infinite;
+      }
+      .s1 {
+        animation-delay: 0s;
+      }
+      .s2 {
+        animation-delay: 0.2s;
+      }
+      .s3 {
+        animation-delay: 0.4s;
+      }
+      .s4 {
+        animation-delay: 0.6s;
+      }
+      .s5 {
+        animation-delay: 0.8s;
+      }
+      .s6 {
+        animation-delay: 1s;
+      }
+      .intro-stick.walk {
+        animation: walk 7s linear forwards;
+      }
+      /* STICKMAN ATTACHMENT */
+      .stickman {
+        position: absolute;
+        left: 20%;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1000;
+      }
+      /* BIG HEAVY BALLS */
+      .circle {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: #8b0000;
+        position: absolute;
+        bottom: -70px;
+        left: -35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        color: white;
+        box-shadow: 0 0 30px rgba(139, 0, 0, 0.8);
+      }
+      .s1 .circle {
+        animation-delay: 0s;
+      }
+      .s2 .circle {
+        animation-delay: 0.2s;
+      }
+      .s3 .circle {
+        animation-delay: 0.4s;
+      }
+      .s4 .circle {
+        animation-delay: 0.6s;
+      }
+      .s5 .circle {
+        animation-delay: 0.8s;
+      }
+      .s6 .circle {
+        animation-delay: 1s;
+      }
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: scale(1) translateY(0);
+        }
+        50% {
+          transform: scale(0.96) translateY(-6px);
+        }
+      }
+
+      /* spread out vertically like weights stacked in life */
+      .s1 {
+        top: -90px;
+        left: 0px;
+      }
+      .s2 {
+        top: -30px;
+        left: 30px;
+      }
+      .s3 {
+        top: 20px;
+        left: 0px;
+      }
+      .s4 {
+        left: 30px;
+        top: 70px;
+      }
+      .s5 {
+        left: 0px;
+        top: 120px;
+      }
+      .s6 {
+        left: 30px;
+        top: 170px;
+      }
+
+      /* sway stronger because weight is heavy */
+      @keyframes sway {
+        0% {
+          transform: rotate(-8deg);
+        }
+        50% {
+          transform: rotate(8deg);
+        }
+        100% {
+          transform: rotate(-8deg);
+        }
+      }
+
+      /* WALKING ANIMATION */
+      .walk {
+        animation: walk 7s linear forwards;
+      }
+
+      @keyframes walk {
+        0% {
+          left: 15%;
+        }
+        100% {
+          left: 75%;
+        }
+      }
+      #backBtn {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        padding: 10px 15px;
+        background: #111;
+        color: white;
+        border: 1px solid #444;
+        cursor: pointer;
+        z-index: 10002;
+        opacity: 0.7;
+      }
+      #backBtn:hover,
+      #nextBtn:hover {
+        opacity: 1;
+      }
+      .scene:nth-child(2) {
+        /* A Story of Becoming */
+        background: #0b0b0f;
+      }
+
+      .scene:nth-child(3) {
+        /* Childhood */
+        background: linear-gradient(to bottom, #1c1f2b, #0b0b0f);
+      }
+
+      .scene:nth-child(4) {
+        /* Early Teenage */
+        background: linear-gradient(to bottom, #1a1d28, #11131a);
+      }
+
+      .scene:nth-child(5) {
+        /* Late Teenage / Campus */
+        background: linear-gradient(to bottom, #141622, #0b0b0f);
+      }
+
+      .scene:nth-child(6) {
+        /* Reflection */
+        background: linear-gradient(to bottom, #0f1016, #0b0b0f);
+      }
+
+      .scene:nth-child(7) {
+        /* Builder */
+        background: linear-gradient(to bottom, #151824, #0b0b0f);
+      }
+
+      .scene:nth-child(8) {
+        /* Final */
+        background: #0b0b0f;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="intro-loader" id="introLoader">
+      <div class="year" id="yearText">Year 1</div>
+      <div class="track">
+        <div class="ball" id="ball"></div>
+      </div>
+    </div>
+
+    <button onclick="nextScene()">Next</button>
+    <button id="backBtn" onclick="prevScene()">Back</button>
+    <!-- INTRO -->
+    <div class="scene">
+      <div class="letter">
+        <h1>A Story of Becoming</h1>
+        <p>This is not just a birthday site.</p>
+        <p>This is memory… turned into motion.</p>
+        <p>Kyulen — 20 years of becoming.</p>
+      </div>
+    </div>
+
+    <!-- CHILDHOOD -->
+    <!-- CHILDHOOD -->
+    <div class="scene">
+      <div class="letter">
+        <h2>Childhood</h2>
+
+        <p>
+          Life, at the beginning, felt like a quiet morning that didn’t know
+          storms existed yet.
+        </p>
+
+        <p>
+          I didn’t understand what loss meant when it first came taking my older
+          sibling. At four years old, death didn’t have a definition in my mind
+          — it just felt like something had been taken from a place I couldn’t
+          name. It left behind a strange thought… like I needed someone older,
+          someone stronger — a firstborn sister who could carry what I didn’t
+          yet understand how to hold.
+        </p>
+
+        <p>
+          But even with that shadow, my childhood wasn’t empty. It had light.
+        </p>
+
+        <p>
+          Dalmus was that light. Where he was, I was there. We moved through
+          days like two shadows that never separated — school, play, everything
+          in between. Life felt simple when you didn’t question it.
+        </p>
+
+        <p>
+          There were others too. Fridah… a soft memory that never really left.
+          Childhood love doesn’t arrive loudly — it just exists, quietly shaping
+          how you learn to feel. Even now, there’s a part of me that wishes I
+          could go back and tell her what she meant… how much of that innocence
+          stayed with me longer than I realized.
+        </p>
+
+        <p>Then life shifted.</p>
+
+        <p>
+          My parents separated when I was in class four. And just like that,
+          “home” stopped being a fixed place and became something temporary…
+          something you moved with instead of returned to. The rentals became
+          the background of my growing years — walls that watched more than they
+          ever held.
+        </p>
+
+        <p>
+          Brenda became another constant. A friendship that filled spaces where
+          things had started to break. She introduced me to explicit content at
+          that small age. Traumatized me and left me wound.
+        </p>
+
+        <p>
+          But not everything that came into my life was gentle. Some things
+          arrived too early — like being shown parts of the world I wasn’t ready
+          to understand. They didn’t just pass through me… they stayed. They
+          changed the way I saw people. The way I saw safety.
+        </p>
+
+        <p>
+          Got sexually abused by Jackline when I was that young still.
+          Traumatized me had to retariate and had to start working on me. Became
+          introvert at that age. I stopped trusting ladies and above all the
+          world.
+        </p>
+
+        <p>
+          There are moments from that time that don’t feel like memories… they
+          feel like fractures.
+        </p>
+
+        <p>
+          And when something breaks that early, you don’t always cry loudly.
+          Sometimes, you just… go quiet.
+        </p>
+
+        <p>
+          I became quieter. More withdrawn. Not because I wanted to disappear —
+          but because it felt safer to exist where nothing could reach me.
+        </p>
+
+        <p>
+          Trust didn’t leave all at once. It faded. Slowly. Especially toward
+          the people I didn’t understand anymore.
+        </p>
+
+        <p>
+          And then there was the moment that almost ended everything before it
+          even had time to begin. A game. A rock. A sudden impact. A broken
+          skull. Near death experience.
+        </p>
+
+        <p>
+          The kind of silence that follows something serious… the kind that
+          reminds you how thin the line between “here” and “gone” really is.
+        </p>
+
+        <p>I didn’t fully understand it then. But I carried it.</p>
+
+        <p>
+          Childhood, for me, was never just one thing. It was light and
+          fracture. Laughter and silence. Connection and distance.
+        </p>
+
+        <p>
+          I saw things I shouldn’t have seen that early. Heard things that
+          stayed longer than they should have. Watched life end… more than once.
+        </p>
+
+        <p>And somehow, through all of that…</p>
+
+        <p>something didn’t collapse.</p>
+
+        <p>
+          It hardened — not into something cold — but into something that could
+          survive.
+        </p>
+
+        <p>
+          The trauma didn’t just break me. It built something in me that refused
+          to disappear.
+        </p>
+      </div>
+    </div>
+
+    <!-- EARLY TEENAGE -->
+    <!-- EARLY TEENAGE -->
+    <div class="scene">
+      <div class="letter">
+        <h2>Early Teenage Years</h2>
+
+        <p>
+          Life didn’t slow down — it kept changing shape in ways I didn’t fully
+          understand at the time.
+        </p>
+
+        <p>
+          School became mandatory, predictable, something I had to move through
+          every day. But inside that routine, I was still trying to understand
+          myself after everything my childhood had already left behind
+          emotionally.
+        </p>
+
+        <p>
+          My mother’s care was my anchor. It felt like I was slowly healing in a
+          space that still felt like home. For a while, I had something close to
+          family I could hold onto. I had my mom. I had my small sister. I had
+          moments that felt normal again.
+        </p>
+
+        <p>
+          But even in that “normal,” something inside me had already shifted.
+        </p>
+
+        <p>I felt okay… but I was still lonely.</p>
+
+        <p>
+          Somewhere along the way, I lost the ease of making friendships. Not
+          because I didn’t meet people — I did — but because I stopped trusting
+          connection the same way again.
+        </p>
+
+        <p>
+          In class six, something changed in my home life. I got a new father
+          figure, and before I had fully learned how to adjust to his presence
+          and behavior, there were experiences that affected me deeply. I don’t
+          revisit them often, but I can say they pulled me back into myself. I
+          became quieter again. More withdrawn. Not because I chose to, but
+          because it felt safer that way.
+        </p>
+
+        <p>
+          That same period also brought something steady into my life — my
+          cousin Morgan. He became more than family. He became a constant
+          presence, someone who didn’t feel temporary. We grew up together from
+          that point onward, and that bond stayed solid through everything.
+        </p>
+
+        <p>Then came high school.</p>
+
+        <p>
+          High school was strange for me — I met many people, but I never really
+          met many friends. Except one.
+        </p>
+
+        <p>Simon.</p>
+
+        <p>
+          Even “best friend” doesn’t feel like a strong enough word for what
+          that was. There should be something beyond best — something deeper,
+          something that carries understanding without needing explanation.
+        </p>
+
+        <p>
+          We stood for each other in ways that shaped both of us. When I was
+          down — through bullying, accusations, fights, and pressure — he stood
+          with me. And when he faced his own struggles, I stood with him too. We
+          didn’t just go through school together. We grew through it together.
+        </p>
+
+        <p>
+          That connection didn’t end when school ended. It stayed, quietly but
+          firmly, beyond it.
+        </p>
+
+        <p>
+          My literature teacher was also one of the few consistent presences
+          throughout high school — someone who saw me not just as a student, but
+          as someone carrying more than what was visible on the surface.
+        </p>
+
+        <p>
+          And somewhere in the middle of all that, I experienced something I
+          still remember softly.
+        </p>
+
+        <p>In class eight, I met Maryanne — my first real feeling of love.</p>
+
+        <p>
+          It wasn’t loud. It wasn’t complicated at first. It was simple in a way
+          only childhood emotions can be — pure, unpolished, real.
+        </p>
+
+        <p>
+          She had a warmth in her presence that made everything around her feel
+          lighter. She wasn’t just someone I liked — she was someone I felt.
+          Someone who made me understand care in a different way. A quiet
+          connection that didn’t need to be defined to be real.
+        </p>
+
+        <p>
+          Even now, that memory doesn’t feel like something that ended — it
+          feels like something that simply passed through my life to shape how I
+          understood love, attention, and presence.
+        </p>
+      </div>
+    </div>
+
+    <!-- HIGH SCHOOL -->
+    <!-- LATE TEENAGE -->
+    <div class="scene">
+      <div class="letter">
+        <p>I didn’t come to campus carrying just a dream.</p>
+
+        <p>I came carrying something quieter than that… but heavier.</p>
+
+        <p>
+          A belief that I could become a software engineer. Not because it was
+          easy, but because it felt like the only place my mind made sense.
+        </p>
+
+        <p>But life didn’t agree with that direction.</p>
+
+        <p>My KCSE results shifted me into Public Health.</p>
+
+        <p>
+          At first, I told myself it was fine. That life was just redirecting
+          me. But deep down, something inside me knew — I was stepping into a
+          life I had not fully chosen yet.
+        </p>
+
+        <br />
+
+        <h2>🎓 Campus — “Where people feel close, but not always safe”</h2>
+
+        <p>
+          Jomo Kenyatta University of Agriculture and Technology didn’t feel
+          like a beginning.
+        </p>
+
+        <p>
+          It felt like being dropped into a place where everyone was already
+          learning how to survive in their own way.
+        </p>
+
+        <p>People were everywhere.</p>
+
+        <p>But trust… was rare.</p>
+
+        <p>That’s where I met Mike.</p>
+
+        <p>
+          At first, he felt like comfort in a new place — someone to walk with,
+          sit with, talk to, exist beside while everything felt unfamiliar.
+        </p>
+
+        <p>We moved like friends do when they’re trying to belong somewhere.</p>
+
+        <p>Then he stole my phone.</p>
+
+        <p>And something in me just went quiet.</p>
+
+        <p>Not anger first.</p>
+
+        <p>
+          Just that familiar reminder that closeness does not always mean
+          safety.
+        </p>
+
+        <br />
+
+        <h2>💫 Puwa — “A connection that felt alive”</h2>
+
+        <p>Then there was her.</p>
+
+        <p>Puwa.</p>
+
+        <p>Trouble Doll.</p>
+
+        <p>
+          She didn’t enter my life loudly. She just… appeared in a way I still
+          don’t know how to explain.
+        </p>
+
+        <p>
+          Black dress. Calm presence. No effort to be seen, yet impossible to
+          ignore.
+        </p>
+
+        <p>
+          I remember thinking — there is something about her I already
+          understand, even before I know her.
+        </p>
+
+        <p>And somehow… she understood me too.</p>
+
+        <p>We didn’t grow slowly.</p>
+
+        <p>We clicked.</p>
+
+        <p>
+          Like two people who had been looking for something they couldn’t name.
+        </p>
+
+        <p>
+          We became lovers, but more than that — we became safe space for each
+          other.
+        </p>
+
+        <p>
+          We shared secrets that never left the room. We shared music that
+          filled silence. We shared moments in Kibali House where life outside
+          campus didn’t feel real.
+        </p>
+
+        <p>That kind of love doesn’t feel like a story when you’re in it.</p>
+
+        <p>It feels like breathing.</p>
+
+        <p>And I loved her in a way that didn’t need explanation.</p>
+
+        <br />
+
+        <h2>🧠 Ted — “The mind I keep returning to”</h2>
+
+        <p>Then there is Ted.</p>
+
+        <p>Ted is not someone you just describe — you experience him.</p>
+
+        <p>
+          He thinks differently. Speaks differently. Even his silence feels like
+          it’s processing something deeper than the room he’s in.
+        </p>
+
+        <p>Sometimes slow, sometimes unpredictable — but always himself.</p>
+
+        <p>
+          I argue with him often, not to win, but to understand how his mind
+          moves.
+        </p>
+
+        <p>
+          There’s something in him that forces you to think more than you speak.
+        </p>
+
+        <p>
+          He jokes in a dark way that somehow still makes sense. He sees
+          patterns in things I overlook. And even when I don’t agree with him, I
+          don’t ignore him.
+        </p>
+
+        <p>
+          Because people like Ted don’t fit into normal categories of
+          friendship.
+        </p>
+
+        <p>They stay in your mind even when they’re not around.</p>
+
+        <br />
+
+        <h2>🧭 Adek — “The calm intelligence I admire”</h2>
+
+        <p>Adek is different.</p>
+
+        <p>
+          There is clarity in the way she thinks. Precision in the way she
+          speaks. And a kind of intelligence that doesn’t try to prove itself.
+        </p>
+
+        <p>
+          She doesn’t just say things — she means them in a structured way that
+          makes you reflect after she’s done talking.
+        </p>
+
+        <p>There’s something I admire about that.</p>
+
+        <p>Not loud confidence.</p>
+
+        <p>But quiet certainty.</p>
+
+        <br />
+
+        <h2>🌿 Ian and others — “Direction and grounding”</h2>
+
+        <p>Ian represents direction.</p>
+
+        <p>Focus. Discipline. A mindset that doesn’t drift easily.</p>
+
+        <p>
+          Being around him reminds me that consistency is also a form of
+          intelligence.
+        </p>
+
+        <p>And then there are others — Ruth, Jasper, Nelly, Yvonne…</p>
+
+        <p>
+          People who don’t necessarily change your direction, but make the
+          journey lighter.
+        </p>
+
+        <p>They feel like pause points in a life that doesn’t always pause.</p>
+
+        <p>
+          And Lennity — my campus mom — is one of those rare presences that
+          makes chaos feel survivable. Not by fixing it… but by simply being
+          there.
+        </p>
+
+        <br />
+
+        <h2>🧠 Love and loss — “What stayed with me”</h2>
+
+        <p>Love in campus didn’t come as one thing.</p>
+
+        <p>It came in layers.</p>
+
+        <p>
+          There was a kind of love that felt pure — the kind that makes life
+          feel alive in ways you don’t question.
+        </p>
+
+        <p>
+          And there was another kind that left confusion behind. The kind that
+          reshapes how you understand trust, attachment, and distance.
+        </p>
+
+        <p>I don’t separate them anymore.</p>
+
+        <p>They both taught me something.</p>
+
+        <p>
+          One showed me how beautiful connection can feel. The other showed me
+          how fragile it is.
+        </p>
+
+        <br />
+
+        <h2>🧠 “What this stage really is”</h2>
+
+        <p>This is not a finished chapter.</p>
+
+        <p>It is a living one.</p>
+
+        <p>I am still here.</p>
+
+        <p>
+          Still learning people. Still learning myself. Still carrying dreams
+          that didn’t follow the path I first imagined.
+        </p>
+
+        <p>
+          I wanted software engineering because it felt like the language my
+          mind speaks.
+        </p>
+
+        <p>
+          Now I am here in Public Health, trying to understand what that means
+          for me… while still holding onto the part of me that builds things in
+          silence.
+        </p>
+
+        <p>And maybe the truth is simple:</p>
+
+        <p>I am not who I thought I would become. But I am still becoming</p>
+
+        <br />
+
+        <h2>“The beginning of building”</h2>
+
+        <p>
+          Somewhere inside all of this — between lectures, friendships, love,
+          confusion, and learning myself — another version of me started forming
+          quietly.
+        </p>
+
+        <p>I started learning programming.</p>
+
+        <p>
+          Not because everything made sense… but because it gave my mind
+          somewhere to go when everything didn’t.
+        </p>
+
+        <p>
+          At first it was just curiosity. Lines of code. Small wins. Broken
+          logic. Late nights of trying again after failing. But slowly, it
+          stopped feeling like just learning.
+        </p>
+
+        <p>It started feeling like creation.</p>
+
+        <p>Like I could actually build something from nothing.</p>
+
+        <br />
+
+        <p>Now, I don’t just learn it.</p>
+
+        <p>I live it.</p>
+
+        <p>
+          I run <b>Kyulinet Tech Solutions</b> and <b>Code Learners Hub</b>.
+        </p>
+
+        <p>And even though it’s still the beginning — I can feel it.</p>
+
+        <p>Not as noise. Not as hype.</p>
+
+        <p>But as direction.</p>
+
+        <p>
+          A quiet sense that something is forming from all the chaos I’ve lived
+          through.
+        </p>
+
+        <p>
+          Not everything in my life has been stable. Not everything has been
+          easy. But this… this feels like the first time I am building something
+          that builds me back.
+        </p>
+
+        <p>It’s still early.</p>
+
+        <p>But it’s real.</p>
+
+        <p>And it’s mine.</p>
+      </div>
+    </div>
+
+    <!-- CAMPUS -->
+    <!-- 20 / FINAL REFLECTION -->
+    <div class="scene">
+      <div class="letter">
+        <p>The number 20 always felt far away… until it wasn’t.</p>
+
+        <p>Now I’m here.</p>
+
+        <p>
+          And when I look back, I don’t see a straight path. I see fragments of
+          moments that somehow built me.
+        </p>
+
+        <p>
+          Some were soft. Some were heavy. Some I still don’t fully know how to
+          explain.
+        </p>
+
+        <p>But all of them stayed.</p>
+
+        <br />
+
+        <p>
+          The animation I created for this moment — the running, the numbers,
+          the weight of the bags — it wasn’t just imagination.
+        </p>
+
+        <p>It was my life.</p>
+
+        <p>
+          Chasing time without realizing it, until suddenly it stopped at 20.
+        </p>
+
+        <p>And everything I had carried appeared at once.</p>
+
+        <p>Success. Pressure. Family. Expectations. Fear. Dreams.</p>
+
+        <p>Not as enemies.</p>
+
+        <p>But as companions I grew with.</p>
+
+        <br />
+
+        <p>I think about the people who shaped me.</p>
+
+        <p>
+          Simon — more than a friend. A rare kind of loyalty that doesn’t need
+          explanation. Someone who stood with me when things were loud around
+          me, and I stood with him too when life tested him.
+        </p>
+
+        <p>
+          Ted — unpredictable, sharp, real. The kind of mind that doesn’t let
+          you stay comfortable in your own thinking. Sometimes I argue with him
+          just to understand how deep his thoughts go. He changed the way I see
+          ideas.
+        </p>
+
+        <p>
+          Adek — calm intelligence. The kind of presence that doesn’t try to
+          prove anything, but still makes you listen carefully when she speaks.
+        </p>
+
+        <p>
+          Ian — focus. Discipline. Direction. A reminder that consistency is
+          also a form of strength.
+        </p>
+
+        <p>
+          Ruth, Sheila, Jasper, Nelly, Yvonne… people who didn’t just exist in
+          my life, but softened it. Made it feel human in moments I needed that
+          most.
+        </p>
+
+        <p>
+          Lennity — my campus mom. A grounding presence in a world that
+          sometimes feels too fast.
+        </p>
+
+        <p>
+          And Puwa… Trouble Doll. A connection that felt alive in a way I still
+          carry quietly. Something real, even if life didn’t let it stay the
+          same forever.
+        </p>
+
+        <p>
+          There were others. Moments. Stories. Some that made me feel seen, and
+          some that made me question everything I thought I understood about
+          trust and love.
+        </p>
+
+        <br />
+
+        <p>And then there is the part of me that started building.</p>
+        <br />
+
+        <p>
+          I came into this world not understanding everything I went through. I
+          didn’t always have the language for it. I still don’t, for some parts.
+        </p>
+
+        <p>But I learned something important along the way:</p>
+
+        <p>
+          I am not only what happened to me. I am also what I chose to build
+          after it.
+        </p>
+
+        <br />
+
+        <p>And at 20…</p>
+
+        <p>I am still becoming.</p>
+
+        <p>Not finished. Not fixed. Not fully figured out.</p>
+
+        <p>But standing.</p>
+
+        <p>Still here. Still learning. Still building.</p>
+      </div>
+    </div>
+
+    <!-- BUILDING -->
+    <div class="scene">
+      <div class="letter">
+        <h2>Becoming a Builder</h2>
+
+        <p>I didn’t start coding because I had clarity.</p>
+
+        <p>I started because I needed somewhere for my mind to go.</p>
+
+        <p>Then it became identity.</p>
+
+        <p><b>Kyulinet Tech Solutions.</b></p>
+        <p><b>Code Learners Hub.</b></p>
+
+        <p>Not achievements yet.</p>
+
+        <p>Beginnings.</p>
+
+        <p>But real ones.</p>
+      </div>
+    </div>
+
+    <!-- FINAL -->
+    <div class="scene">
+      <div class="letter">
+        <h2>At 20</h2>
+
+        <p>The number 20 used to feel far away.</p>
+
+        <p>Now it is here.</p>
+
+        <p>I don’t see a straight path when I look back.</p>
+
+        <p>I see fragments. Moments. People. Pain. Growth.</p>
+
+        <p>Some things broke me. Some things built me.</p>
+
+        <p>But I am still here.</p>
+
+        <p><b>I am not who I was.</b></p>
+
+        <p><b>I am still becoming.</b></p>
+      </div>
+    </div>
+    <audio id="bgMusic" preload="auto">
+      <source
+        src="music/Billie Eilish - Getting Older (Official Lyric Video).m4a"
+        type="audio/mpeg"
+      />
+    </audio>
+    <script>
+      function prevScene() {
+        if (currentScene > 0) {
+          currentScene--;
+          showScene(currentScene);
+        }
+      }
+      // SCENES
+      const scenes = document.querySelectorAll(".scene");
+      let currentScene = 0;
+
+      // ALWAYS start clean
+      function showScene(index) {
+        scenes.forEach((s) => s.classList.remove("active"));
+
+        if (scenes[index]) {
+          scenes[index].classList.add("active");
+        }
+
+        // toggle buttons
+        document.getElementById("backBtn").style.display =
+          index === 0 ? "none" : "block";
+
+        document.getElementById("nextBtn").style.display =
+          index === scenes.length - 1 ? "none" : "block";
+      }
+      function nextScene() {
+        if (currentScene < scenes.length - 1) {
+          currentScene++;
+          showScene(currentScene);
+        }
+      }
+      /* INTRO LOADER */
+      const ball = document.getElementById("ball");
+      const yearText = document.getElementById("yearText");
+      const introLoader = document.getElementById("introLoader");
+
+      let year = 1;
+
+      function runIntro() {
+        const interval = setInterval(() => {
+          const progress = year / 20;
+
+          ball.style.left = `calc(${progress * 100}% - 9px)`;
+          yearText.textContent = `Year ${year}`;
+
+          year++;
+
+          if (year > 20) {
+            clearInterval(interval);
+
+            introLoader.style.opacity = "0";
+            introLoader.style.transition = "1.2s ease";
+            introLoader.style.display = "none";
+
+            setTimeout(() => {
+              introLoader.style.display = "none";
+
+              // START at first REAL scene (skip empty one)
+              currentScene = 0;
+              showScene(currentScene);
+              startMusic();
+            }, 1200);
+          }
+        }, 200);
+      }
+      const music = document.getElementById("bgMusic");
+
+      function startMusic() {
+        music.volume = 0.6;
+        music.play().catch(() => {
+          // fallback: wait for user interaction
+          document.body.addEventListener(
+            "click",
+            () => {
+              music.play();
+            },
+            { once: true },
+          );
+        });
+      }
+      let musicStarted = false;
+
+      function startMusicOnce() {
+        if (!musicStarted) {
+          musicStarted = true;
+          music.play();
+        }
+      }
+
+      document.body.addEventListener("click", startMusicOnce, { once: true });
+      runIntro();
+    </script>
+  </body>
+</html>
